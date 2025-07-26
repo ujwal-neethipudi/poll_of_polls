@@ -1,0 +1,65 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# Load required packages
+library(dplyr)
+library(readr)
+library(lubridate)
+```
+
+```{r}
+# Load polling data
+polls <- read_csv("india_2024_polling_simulation.csv")
+```
+
+```{r}
+# Convert date column to Date type
+polls <- polls %>%
+  mutate(date = as.Date(date))
+```
+
+```{r}
+# Define reference date (latest poll)
+reference_date <- max(polls$date)
+```
+
+```{r}
+# Calculate days ago
+polls <- polls %>%
+  mutate(
+    days_ago = as.numeric(difftime(reference_date, date, units = "days"))
+  )
+```
+
+```{r}
+# Apply exponential time decay
+lambda <- 0.05  # Decay rate
+polls <- polls %>%
+  mutate(
+    weight_time = exp(-lambda * days_ago)
+  )
+```
+
+```{r}
+# Apply sample size weight (sqrt of n)
+polls <- polls %>%
+  mutate(
+    weight_sample = sqrt(sample_size)
+  )
+```
+
+```{r}
+# Combine into total weight
+polls <- polls %>%
+  mutate(
+    weight_total = weight_time * weight_sample
+  )
+```
+
+```{r}
+# Save to new CSV for downstrean use
+write_csv(polls, "india_2024_weighted_polls.csv")
+```

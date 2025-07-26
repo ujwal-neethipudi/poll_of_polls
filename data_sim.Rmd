@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+# Loading required packages
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+# Setting random seed for reproducibility
+set.seed(42)
+```
+
+```{r}
+# Defining polling period (weekly polls from Feb 1 to April 15)
+polling_dates <- seq(ymd("2024-02-05"), ymd("2024-04-15"), by = "1 week")
+```
+
+```{r}
+# Defining polling firms and parties
+pollsters <- c("C Voter", "Axis My India", "Lokniti-CSDS", "People's Insight")
+parties <- c("BJP", "INC", "AAP", "Others")
+```
+
+```{r}
+# Defining base support (starting point)
+base_support <- c(BJP = 38, INC = 27, AAP = 12, Others = 23)
+```
+
+```{r}
+# Defining pollster biases
+biases <- list(
+  "C Voter" = c(BJP = 1.5, INC = -0.5, AAP = 0.0, Others = -1.0),
+  "Axis My India" = c(BJP = 0.5, INC = 0.5, AAP = -0.5, Others = -0.5),
+  "Lokniti-CSDS" = c(BJP = -0.5, INC = 1.0, AAP = 0.0, Others = -0.5),
+  "People's Insight" = c(BJP = 0.0, INC = 0.0, AAP = 1.0, Others = -1.0)
+)
+```
+
+```{r}
+# Generating simulated polling data
+poll_data <- expand.grid(date = polling_dates, pollster = pollsters) %>%
+  mutate(
+    sample_size = sample(800:1600, n(), replace = TRUE)
+  )
+```
+
+```{r}
+# Simulating results for each party
+for (party in parties) {
+  poll_data[[party]] <- mapply(function(firm, date) {
+    bias <- biases[[firm]][[party]]
+    base <- base_support[[party]]
+    noise <- rnorm(1, mean = 0, sd = 1.5)
+    value <- base + bias + noise
+    value <- min(max(value, 1), 60)  # Clamp between 1% and 60%
+    return(value)
+  }, poll_data$pollster, poll_data$date)
+}
+```
+
+```{r}
+# Save as CSV
+write_csv(poll_data, "india_2024_polling_simulation.csv")
+```
+

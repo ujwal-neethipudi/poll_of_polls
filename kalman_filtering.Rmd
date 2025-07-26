@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dlm)
+library(lubridate)
+```
+
+```{r}
+polls <- read_csv("data/india_2024_weighted_polls.csv")
+```
+
+```{r}
+# Define a basic local level model builder for the Kalman filter
+build_kalman_model <- function(par) {
+  dlmModPoly(order = 1, dV = exp(par[1]), dW = exp(par[2]))
+}
+```
+
+```{r}
+apply_kalman_filter <- function(df, party) {
+  agg <- df %>%
+    group_by(date) %>%
+    summarize(
+      raw_vote = weighted.mean(.data[[party]], weight_total),
+      .groups = 'drop'
+    ) %>%
+    arrange(date)
+
+  ts_data <- ts(agg$raw_vote)
+
+  # Step 1: Fit Kalman filter model
+  fit <- tryCatch({
+    dlmMLE(ts_data, parm = c(0, 0), build = build_kalman_model)
+  }, error = function(e) {
+    warning(paste("MLE failed for", party, ":", e$message))
+    return(NULL)
+  })
+  if (is.null(fit)) return(NULL)
+
+  model <- build_kalman_model(fit$par)
+  filtered <- tryCatch({
+    dlmFilter(ts_data, model)
+  }, error = function(e) {
+    warning(paste("Kalman filter failed for", party, ":", e$message))
+    return(NULL)
+  })
+  if (is.null(filtered)) return(NULL)
+
+  # Step 2: Safely compute variance estimates
+  variances <- sapply(2:length(filtered$U.S), function(i) {
+    u <- filtered$U.S[[i]]
+    d <- filtered$D.S[[i]]
+    if (is.null(u) || is.null(d)) return(NA)
+    tryCatch({
+      var_matrix <- dlmSvd2var(u, d)
+      var_matrix[1, 1]
+    }, error = function(e) NA)
+  })
+
+  # Step 3: Final data frame
+  agg <- agg %>%
+    mutate(
+      party = party,
+      smoothed = drop(filtered$m[-1]),
+      lower = smoothed - 1.96 * sqrt(variances),
+      upper = smoothed + 1.96 * sqrt(variances)
+    )
+
+  return(agg)
+}
+
+
+```
+
+```{r}
+parties <- c("BJP", "INC", "AAP", "Others")
+
+smoothed_data <- map_dfr(parties, ~apply_kalman_filter(polls, .x))
+```
+
+```{r}
+# plotting smoothed trends
+ggplot(smoothed_data, aes(x = date)) +
+  geom_point(aes(y = raw_vote), color = "gray60", alpha = 0.5) +
+  geom_line(aes(y = smoothed), color = "darkblue", size = 1) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "blue", alpha = 0.2) +
+  facet_wrap(~party) +
+  labs(
+    title = "Kalman-Filtered Poll Trends — India 2024 (Simulated)",
+    subtitle = "Each line shows smoothed party support over time",
+    x = "Date",
+    y = "Vote Share (%)"
+  ) +
+  theme_minimal(base_size = 14)
+
+```
