@@ -4,7 +4,7 @@ library(dlm)
 library(lubridate)
 
 # Load polling data
-polls <- read_csv("india_2024_weighted_polls.csv")
+polls <- read_csv("data/india_2024_weighted_polls.csv")
 
 # List of parties
 parties <- c("BJP", "INC", "AAP", "Others")
