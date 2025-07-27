@@ -85,50 +85,10 @@ shiny::runApp("app.R")
 
 ---
 
-## Included Political Parties
-
-- **BJP** – Bharatiya Janata Party
-- **INC** – Indian National Congress
-- **AAP** – Aam Aadmi Party
-- **Others** – All other parties grouped
-
----
-
-## Technical Skills Demonstrated
-
-- R Programming (tidyverse, functional programming)
-- Shiny development (reactivity, UI/UX)
-- Statistical modeling (Kalman filtering, weighting)
-- Debugging and numerical stability (dlm variance edge cases)
-- Workflow design: modular scripts, reproducible analysis
-
----
-
-## 📌 Development Notes
+## Development Notes
 
 - Kalman filtering and `dlm` stability debugging was assisted using Claude AI.
 - Project concept, simulation methodology, Shiny interface, and overall structure were independently developed.
 
----
 
-## 🔮 Future Enhancements
 
-- Integration with real-time polling data
-- Alternative smoothing (e.g., LOESS, spline)
-- Regional and state-level disaggregation
-- Forecasting turnout or seats
-- Quality scoring for pollsters
-
----
-
-## License
-
-This project is for **educational and demonstration purposes only**.
-
----
-
-## Acknowledgments
-
-- Claude AI (technical debugging) and assistance with Kalman filtering + shiny app UI
-- POLITICO Europe methodology inspiration
-- R open source community
