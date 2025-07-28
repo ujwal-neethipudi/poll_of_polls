@@ -77,12 +77,6 @@ install.packages(c("shiny", "tidyverse", "dlm", "lubridate", "plotly"))
 ```r
 shiny::runApp("app.R")
 ```
-
-### Usage
-- Select parties from the sidebar
-- View smoothed trends and raw points
-- Hover for details, zoom with Plotly
-
 ---
 
 ## Development Notes
