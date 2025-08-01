@@ -77,12 +77,6 @@ install.packages(c("shiny", "tidyverse", "dlm", "lubridate", "plotly"))
 ```r
 shiny::runApp("app.R")
 ```
----
-
-## Development Notes
-
-- Kalman filtering and `dlm` stability debugging was assisted using Claude AI.
-- Project concept, simulation methodology, Shiny interface, and overall structure were independently developed.
 
 
 
